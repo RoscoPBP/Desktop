@@ -22,12 +22,14 @@ class SelectLanguageScreen extends StatelessWidget {
               spacing: 8.0,
               runSpacing: 8.0,
               alignment: WrapAlignment.center,
-              //children: appData.languages.map((language) {
               children: appData.languageWords.keys.map((language) {
                 return ElevatedButton(
                   onPressed: () {
+                    // Establecer el idioma seleccionado en appData.language
+                    appData.language = language;
+                    // Llamar al método getDictionaryWordCountCa con el idioma seleccionado
                     appData.getDictionaryWordCountCa().then((_) {
-                      appData.language = "catalan";
+                      // Navegar a la pantalla DictionaryScreen
                       Navigator.push(
                         context,
                         MaterialPageRoute(

@@ -8,7 +8,7 @@ class AppData extends ChangeNotifier {
   Map<String, List<String>> languageWords = {};
   int pagina = 1;
   int cantidad = 20;
-  String language = 'catalan';
+  String language = '';
   int wordCount = 0;
 
   // Método para realizar una solicitud GET a la API
@@ -25,14 +25,13 @@ class AppData extends ChangeNotifier {
   Future<void> getLanguages() async {
     try {
       final response = await http.get(
-        Uri.parse('$apiUrl/api/getLanguages'),
+        Uri.parse('$apiUrl/api/dictionary/languages'),
       );
       if (response.statusCode == 200) {
         Map<String, dynamic> jsonData = json.decode(response.body);
-        List<dynamic> languages = jsonData['languages'];
-        for (dynamic language in languages) {
-          String languageName = language
-              .toString(); // Suponiendo que el nombre del idioma está como un String en la lista
+        List<dynamic> languagesData = jsonData['data']['languages'];
+        for (dynamic languageData in languagesData) {
+          String languageName = languageData['name'];
           languageWords[languageName] = [];
         }
       } else {

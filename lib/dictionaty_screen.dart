@@ -7,6 +7,7 @@
 //    "pagina" : 20
 // }
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'app_data.dart';
 
@@ -18,6 +19,8 @@ class DictionaryScreen extends StatefulWidget {
 class _DictionaryScreenState extends State<DictionaryScreen> {
   TextEditingController _pageController = TextEditingController();
   List<String> _dictionaryWords = [];
+  int currentPage = 1;
+  int maxPages = 1;
 
   @override
   void initState() {
@@ -34,6 +37,10 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
             Provider.of<AppData>(context, listen: false).languageWords[
                     Provider.of<AppData>(context, listen: false).language] ??
                 [];
+        currentPage = Provider.of<AppData>(context, listen: false).pagina;
+        maxPages = (Provider.of<AppData>(context, listen: false).wordCount /
+                Provider.of<AppData>(context, listen: false).cantidad)
+            .ceil();
       });
     } catch (error) {
       print('Error loading dictionary: $error');
@@ -42,32 +49,39 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    int totalPages = (Provider.of<AppData>(context).wordCount / 20)
-        .ceil(); // Calcular el número total de páginas
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dictionary'),
+        title: Text('Dictionary - $currentPage/$maxPages'),
       ),
       body: Column(
         children: [
           Row(
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _pageController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: 'Page',
+              SizedBox(
+                width: 100, // Ajusta el ancho del campo de texto
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                      left: 8.0), // Agrega padding al lado izquierdo
+                  child: TextField(
+                    controller: _pageController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter
+                          .digitsOnly // Restringe la entrada solo a números
+                    ],
+                    decoration: InputDecoration(
+                      labelText: 'Page',
+                    ),
+                    style: TextStyle(
+                      fontSize: 14.0,
+                    ),
                   ),
-                  style: TextStyle(
-                      fontSize: 14.0), // Ajusta el tamaño de la fuente
                 ),
               ),
               ElevatedButton(
                 onPressed: () async {
                   int pageNumber = int.tryParse(_pageController.text) ?? 1;
-                  if (pageNumber > totalPages || pageNumber < 1) {
+                  if (pageNumber > maxPages || pageNumber < 1) {
                     // Validar si el número de página es válido
                     showDialog(
                       context: context,
@@ -99,6 +113,7 @@ class _DictionaryScreenState extends State<DictionaryScreen> {
                                   Provider.of<AppData>(context, listen: false)
                                       .language] ??
                               [];
+                      currentPage = pageNumber;
                     });
                   }
                 },

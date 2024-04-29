@@ -24,9 +24,7 @@ class HomePage extends StatelessWidget {
       body: Center(
         child: ElevatedButton(
           onPressed: () async {
-            //await Provider.of<AppData>(context, listen: false).getLanguages();
-            Provider.of<AppData>(context, listen: false)
-                .languageWords['catalan'] = [];
+            await Provider.of<AppData>(context, listen: false).getLanguages();
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => SelectLanguageScreen()),
