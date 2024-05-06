@@ -6,13 +6,9 @@ import 'package:rosco_pbp/player.dart';
 import 'dart:async'; // Importa este paquete para utilizar Timer
 
 class GameInfoScreen extends StatefulWidget {
-  final Player player1;
-  final Player player2;
 
   const GameInfoScreen({
     Key? key,
-    required this.player1,
-    required this.player2,
   }) : super(key: key);
 
   @override
@@ -25,10 +21,7 @@ class _GameInfoScreenState extends State<GameInfoScreen> {
   @override
   void initState() {
     super.initState();
-    // Inicia el temporizador para ejecutar fetchGameInfo cada segundo
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      Provider.of<AppData>(context, listen: false).fetchGameInfo();
-    });
+    
   }
 
   @override
@@ -40,52 +33,82 @@ class _GameInfoScreenState extends State<GameInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    AppData appData = Provider.of<AppData>(context, listen: false);
+
+    // Inicia el temporizador para ejecutar fetchGameInfo cada segundo
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) async {
+      bool noGamePlayed = await Provider.of<AppData>(context, listen: false).fetchGameInfo(context);
+      if (noGamePlayed == false) {
+        print("se acabo la partida");
+        Navigator.pop(context);
+      }
+
+    });
     return Scaffold(
       appBar: AppBar(
-        title: Text('Game Info'),
+        title: const Text('Game Info'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body:  Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Column(children: [
+        Row(
+          mainAxisSize: MainAxisSize.max, // Ensure the Row takes up all horizontal space
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Jugador 1',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text('Nombre: ${widget.player1.name}'),
-                  Text('Puntuación: ${widget.player1.score}'),
-                ],
-              ),
-            ),
-            SizedBox(width: 16), // Espacio entre las columnas
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Jugador 2',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text('Nombre: ${widget.player2.name}'),
-                  Text('Puntuación: ${widget.player2.score}'),
-                ],
-              ),
-            ),
+            _buildContainer('UUID:', appData.data['UUID']),
+            _buildContainer('Start Date:', appData.data['startDate']),
+            _buildContainer('Type:', appData.data['type']),
+            _buildContainer('Dictionary Code:', appData.data['dictionaryCode']),
+            _buildContainer('Letters:', appData.data['letters'].toString()),
           ],
         ),
+        const SizedBox(height: 16), // Add some spacing between the Row and the next element
+          if (appData.players.isEmpty) // Conditionally show the red or green container
+            Container(
+              width: 100, // Take up all horizontal space
+              height: 100, // Set height as needed
+              color: Colors.red,
+            )
+          else
+            Container(
+              width: 100, // Take up all horizontal space
+              height: 100, // Set height as needed
+              color: Colors.green,
+            ),
+
+      ],)
+      
+      
+    ),
+  ));
+  }
+
+  Widget _buildContainer(String label, String data) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 8.0),
+      padding: EdgeInsets.all(8.0),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.black),
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 4),
+          Text(
+            data,
+            style: TextStyle(
+              color: Colors.grey[700],
+            ),
+          ),
+        ],
       ),
     );
   }

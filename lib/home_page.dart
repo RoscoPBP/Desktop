@@ -18,6 +18,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppData appData = Provider.of<AppData>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: Text('HomePage'),
@@ -28,8 +29,7 @@ class HomePage extends StatelessWidget {
           children: [
             ElevatedButton(
               onPressed: () async {
-                await Provider.of<AppData>(context, listen: false)
-                    .getLanguages();
+                appData.getLanguages();
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -41,21 +41,37 @@ class HomePage extends StatelessWidget {
             SizedBox(height: 20), // Espacio entre los botones
             ElevatedButton(
               onPressed: () async {
-                await Provider.of<AppData>(context, listen: false)
-                    .fetchGameInfo();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => GameInfoScreen(
-                            // Cambia la ruta a GameInfoScreen
-                            player1:
-                                Provider.of<AppData>(context, listen: false)
-                                    .players[0],
-                            player2:
-                                Provider.of<AppData>(context, listen: false)
-                                    .players[1],
-                          )),
-                );
+                 bool isInGame = await appData.fetchGameInfo(context);
+
+                if (isInGame) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => GameInfoScreen()),
+                  );
+                } else {
+                  print("no se puede ir");
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Game not found'),
+                        content: Text('Currently there are no games being played'),
+                        actions: <Widget>[
+                          // Close button
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text('Close'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                }
+                
               },
               child: Text('Seguir partida'),
             ),

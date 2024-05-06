@@ -14,6 +14,9 @@ class AppData extends ChangeNotifier {
   int wordCount = 0;
   List<Player> players = [];
 
+  // data de la partida
+  dynamic data;
+
   // Método para realizar una solicitud GET a la API
   Future<Map<String, dynamic>> fetchData(String endpoint) async {
     final response = await http.get(Uri.parse('$apiUrl/$endpoint'));
@@ -129,36 +132,41 @@ class AppData extends ChangeNotifier {
     }
   }
 
-  Future<void> fetchGameInfo() async {
+  Future<bool> fetchGameInfo(BuildContext context) async {
+    bool enPartida = false;
     try {
       final response = await fetchData('/api/game/data');
-      print('Response from API: $response'); // Imprimir la respuesta completa
+      print('Response from API: $response'); // Print the entire response
 
-      // Verificar si 'enPartida' es false
-      bool enPartida = response['enPartida'];
+      // Check if 'enPartida' is false
+      enPartida = response['enPartida'];
       if (!enPartida) {
-        throw Exception('No hay partida en curso');
+        print('No hay partida en curso');
+        return false; // Return false when there is no game in progress
       }
 
-      // Acceder a los datos dentro de 'data'
-      final data = response['data'];
+      // Access data inside 'data'
+      data = response['data'];
 
-      // Acceder a la lista de jugadores dentro de 'data'
+      // Access player list inside 'data'
       List<dynamic> playerData = data['players'];
 
-      // Mapear los datos de los jugadores a objetos Player
+      // Map player data to Player objects
       players = playerData.map((data) => Player.fromJson(data)).toList();
+      // If there are no players, create fake players with empty information
+      /*if (players.isEmpty) {
+        players.add(Player(name: '', score: 0)); // Fake player 1
+        players.add(Player(name: '', score: 0)); // Fake player 2
+      }*/
 
-      // Si no hay jugadores, crear jugadores falsos con información vacía
-      if (players.isEmpty) {
-        players.add(Player(name: '', score: 0)); // Jugador 1 falso
-        players.add(Player(name: '', score: 0)); // Jugador 2 falso
-      }
-
-      // Notificar a los listeners después de actualizar los datos
+      // Notify listeners after updating data
+      // XDDDDDDD
       notifyListeners();
+
+      return true; // Return true when game info is successfully fetched
     } catch (error) {
-      throw Exception('Failed to fetch game info: $error');
+      print('Failed to fetch game info: $error');
+      return false; // Return false when an exception occurs
     }
-  }
+}
 }
