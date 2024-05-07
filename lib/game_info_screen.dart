@@ -17,11 +17,12 @@ class GameInfoScreen extends StatefulWidget {
 
 class _GameInfoScreenState extends State<GameInfoScreen> {
   late Timer _timer; // Define un Timer para ejecutar el método fetchGameInfo
+  late BuildContext _context; // Guarda una referencia al contexto
 
   @override
   void initState() {
     super.initState();
-    
+    _context = context; // Asigna el contexto actual a la variable _context
   }
 
   @override
@@ -33,15 +34,22 @@ class _GameInfoScreenState extends State<GameInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    AppData appData = Provider.of<AppData>(context, listen: false);
+    AppData appData = Provider.of<AppData>(context, listen: true);
 
     // Inicia el temporizador para ejecutar fetchGameInfo cada segundo
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) async {
-      bool noGamePlayed = await Provider.of<AppData>(context, listen: false).fetchGameInfo(context);
+  _timer = Timer.periodic(Duration(seconds: 1), (timer) async {
+    try {
+      bool noGamePlayed = await Provider.of<AppData>(_context, listen: false).fetchGameInfo(_context);
       if (noGamePlayed == false) {
         print("se acabo la partida");
-        Navigator.pop(context);
+        Navigator.pop(_context);
       }
+    } catch (e) {
+      // Maneja el error aquí, en este caso, vuelve atrás en la navegación
+      Navigator.pop(_context);
+    }
+
+
 
     });
     return Scaffold(
@@ -64,18 +72,21 @@ class _GameInfoScreenState extends State<GameInfoScreen> {
           ],
         ),
         const SizedBox(height: 16), // Add some spacing between the Row and the next element
-          if (appData.players.isEmpty) // Conditionally show the red or green container
-            Container(
-              width: 100, // Take up all horizontal space
-              height: 100, // Set height as needed
-              color: Colors.red,
-            )
-          else
-            Container(
-              width: 100, // Take up all horizontal space
-              height: 100, // Set height as needed
-              color: Colors.green,
-            ),
+          if (appData.players.isNotEmpty) // Conditionally show the red or green container
+                DataTable(
+                  columns: [
+                    DataColumn(label: Text('Nombre')),
+                    DataColumn(label: Text('Puntos')),
+                  ],
+                  rows: appData.players.map((player) {
+                    return DataRow(cells: [
+                      DataCell(Text(player.name)),
+                      DataCell(Text(player.score.toString())),
+                    ]);
+                  }).toList(),
+                )
+                else
+                    Text('No hay jugadores disponibles'),
 
       ],)
       
